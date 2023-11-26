@@ -1,140 +1,142 @@
 import tkinter as tk
-from tkinter import filedialog
-from tkinter import colorchooser
-from PIL import Image, ImageOps, ImageTk, ImageFilter
-from tkinter import ttk
-import os
-root = tk.Tk()
-root.geometry("1000x600")
-root.title("FotoFoto")
-root.config(bg="white")
+from tkinter import filedialog, colorchooser
+from PIL import Image, ImageTk, ImageFilter, ImageDraw
+import os 
 
+class PhotoEditorApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("FotoFoto Editor App")
 
+       
+        self.image_path = ""
+        self.original_image = None
+        self.current_image = None
+        self.canvas = None
+        self.draw = None
+        self.pen_color = "black"
+        self.pen_size = 1
 
-pen_color = "black"
-pen_size = 5
-file_path = ""
+        # Create GUI
+        self.create_menu()
+        self.create_canvas()
 
+    def create_menu(self):
+        menu_bar = tk.Menu(self.root)
 
-def add_image():
-    global file_path
-    file_path = filedialog.askopenfilename(
-        initialdir="D:/codefirst.io/Tkinter Image Editor/Pictures")
-    image = Image.open(file_path)
-    width, height = int(image.width / 2), int(image.height / 2)
-    image = image.resize((width, height), Image.LANCZOS)
-    canvas.config(width=image.width, height=image.height)
-    image = ImageTk.PhotoImage(image)
-    canvas.image = image
-    canvas.create_image(0, 0, image=image, anchor="nw")
+        file_menu = tk.Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label="Open", command=self.open_image)
+        file_menu.add_command(label="Save", command=self.save_image)
+        file_menu.add_command(label="Return To FotoFoto Viewer", command=return_to)
+        menu_bar.add_cascade(label="File", menu=file_menu)
 
+        edit_menu = tk.Menu(menu_bar, tearoff=0)
+        edit_menu.add_command(label="Clear Filters", command=self.clear_filters)
+        menu_bar.add_cascade(label="Edit", menu=edit_menu)
 
-def change_color():
-    global pen_color
-    pen_color = colorchooser.askcolor(title="Select Pen Color")[1]
+        color_menu = tk.Menu(menu_bar, tearoff=0)
+        color_menu.add_command(label="Choose Pen Color", command=self.choose_pen_color)
+        color_menu.add_command(label="Reset Pen Color", command=self.reset_pen_color)
+        menu_bar.add_cascade(label="Pen Color", menu=color_menu)
 
+        pen_menu = tk.Menu(menu_bar, tearoff=0)
+        pen_menu.add_command(label="Increase Pen Size", command=self.increase_pen_size)
+        pen_menu.add_command(label="Decrease Pen Size", command=self.decrease_pen_size)
+        pen_menu.add_command(label="Clear Drawing", command=self.clear_drawing)
+        menu_bar.add_cascade(label="Pen Options", menu=pen_menu)
 
-def change_size(size):
-    global pen_size
-    pen_size = size
+        filter_menu = tk.Menu(menu_bar, tearoff=0)
+        filter_menu.add_command(label="Black and White", command=lambda: self.apply_filter("black_and_white"))
+        filter_menu.add_command(label="Blur", command=lambda: self.apply_filter("blur"))
+        filter_menu.add_command(label="Sharpen", command=lambda: self.apply_filter("sharpen"))
+        filter_menu.add_command(label="Smooth", command=lambda: self.apply_filter("smooth"))
+        filter_menu.add_command(label="Emboss", command=lambda: self.apply_filter("emboss"))
+        menu_bar.add_cascade(label="Filter", menu=filter_menu)
 
+        self.root.config(menu=menu_bar)
 
-def draw(event):
-    x1, y1 = (event.x - pen_size), (event.y - pen_size)
-    x2, y2 = (event.x + pen_size), (event.y + pen_size)
-    canvas.create_oval(x1, y1, x2, y2, fill=pen_color, outline='')
+    def create_canvas(self):
+        self.canvas = tk.Canvas(self.root, bg="white", width=600, height=400)
+        self.canvas.pack(expand=tk.YES, fill=tk.BOTH)
+        self.canvas.bind("<B1-Motion>", self.paint)
+    
 
+    def open_image(self):
+        self.image_path = filedialog.askopenfilename()
+        if self.image_path:
+            self.original_image = Image.open(self.image_path)
+            self.reset_image()
+            self.display_image()
+    
 
-def clear_canvas():
-    canvas.delete("all")
-    canvas.create_image(0, 0, image=canvas.image, anchor="nw")
+    def reset_image(self):
+        self.current_image = self.original_image.copy()
+        self.draw = None
+    
 
+    def display_image(self):
+        self.image_tk = ImageTk.PhotoImage(self.current_image)
+        self.canvas.config(width=self.current_image.width, height=self.current_image.height)
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
 
-def apply_filter(filter):
-    image = Image.open(file_path)
-    width, height = int(image.width / 2), int(image.height / 2)
-    image = image.resize((width, height), Image.LANCZOS)
-    if filter == "Black and White":
-        image = ImageOps.grayscale(image)
-    elif filter == "Blur":
-        image = image.filter(ImageFilter.BLUR)
-    elif filter == "Sharpen":
-        image = image.filter(ImageFilter.SHARPEN)
-    elif filter == "Smooth":
-        image = image.filter(ImageFilter.SMOOTH)
-    elif filter == "Emboss":
-        image = image.filter(ImageFilter.EMBOSS)
-    image = ImageTk.PhotoImage(image)
-    canvas.image = image
-    canvas.create_image(0, 0, image=image, anchor="nw")
+    def save_image(self):
+        if self.current_image:
+            save_path = filedialog.asksaveasfilename(defaultextension=".png",
+                                                       filetypes=[("PNG files", "*.png")])
+            if save_path:
+                self.current_image.save(save_path)
 
-def save_image():
-    if save_image:
-        save_path = filedialog.asksaveasfilename(defaultextension=".png")
-        if save_path:
-            try:
-                Image.open(file_path).save(save_path, quality=100)
-            except Exception as e:
-                print(f"Failed to save the image: {e}")
+    def apply_filter(self, filter_type):
+        if self.current_image:
+            if filter_type == "black_and_white":
+                self.current_image = self.current_image.convert("L")
+            elif filter_type == "blur":
+                self.current_image = self.current_image.filter(ImageFilter.BLUR)
+            elif filter_type == "sharpen":
+                self.current_image = self.current_image.filter(ImageFilter.SHARPEN)
+            elif filter_type == "smooth":
+                self.current_image = self.current_image.filter(ImageFilter.SMOOTH)
+            elif filter_type == "emboss":
+                self.current_image = self.current_image.filter(ImageFilter.EMBOSS)
+            self.display_image()
 
+    def clear_filters(self):
+        self.reset_image()
+        self.display_image()
 
+    def choose_pen_color(self):
+        color = colorchooser.askcolor(initialcolor=self.pen_color)[1]
+        if color:
+            self.pen_color = color
+
+    def reset_pen_color(self):
+        self.pen_color = "black"
+
+    def increase_pen_size(self):
+        self.pen_size += 5
+
+    def decrease_pen_size(self):
+        if self.pen_size > 1:
+            self.pen_size -= 1
+
+    def clear_drawing(self):
+        self.reset_image()
+        self.display_image()
+
+    def paint(self, event):
+        if self.current_image:
+            if not self.draw:
+                self.draw = ImageDraw.Draw(self.current_image)
+            x1, y1 = (event.x - self.pen_size), (event.y - self.pen_size)
+            x2, y2 = (event.x + self.pen_size), (event.y + self.pen_size)
+            self.draw.line([x1, y1, x2, y2], fill=self.pen_color, width=self.pen_size * 2)
+            self.display_image()
 filename = "ImageViewer.py"
 def return_to():
     root.destroy()
     os.system(f"python {filename}")
 
-
-left_frame = tk.Frame(root, width=200, height=600, bg="white")
-left_frame.pack(side="left", fill="y")
-
-canvas = tk.Canvas(root, width=750, height=600)
-canvas.pack()
-
-#Buttons
-image_button = tk.Button(left_frame, text="Add Image",
-                         command=add_image, bg="white")
-image_button.pack(pady=15)
-save_image_button = tk.Button(left_frame,  text="Save photo", command=save_image, bg="white")
-save_image_button.pack(pady= 5)
-
-color_button = tk.Button(
-    left_frame, text="Change Pen Color", command=change_color, bg="white")
-color_button.pack(pady=5)
-
-pen_size_frame = tk.Frame(left_frame, bg="white")
-pen_size_frame.pack(pady=5)
-
-pen_size_1 = tk.Radiobutton(
-    pen_size_frame, text="Small", value=3, command=lambda: change_size(3), bg="white")
-pen_size_1.pack(side="left")
-
-pen_size_2 = tk.Radiobutton(
-    pen_size_frame, text="Medium", value=5, command=lambda: change_size(5), bg="white")
-pen_size_2.pack(side="left")
-pen_size_2.select()
-
-pen_size_3 = tk.Radiobutton(
-    pen_size_frame, text="Large", value=7, command=lambda: change_size(7), bg="white")
-pen_size_3.pack(side="left")
-
-clear_button = tk.Button(left_frame, text="Clear",
-                         command=clear_canvas, bg="#FF9797")
-clear_button.pack(pady=10)
-
-filter_label = tk.Label(left_frame, text="Select Filter", bg="white")
-filter_label.pack()
-filter_combobox = ttk.Combobox(left_frame, values=["Black and White", "Blur",
-                                                   "Emboss", "Sharpen", "Smooth"])
-filter_combobox.pack()
-
-return_button = tk.Button(left_frame, text="Return",
-                          bg="#FF9797", command=return_to)
-return_button.pack(pady=20)
-
-filter_combobox.bind("<<ComboboxSelected>>",
-                     lambda event: apply_filter(filter_combobox.get()))
-
-canvas.bind("<B1-Motion>", draw)
-
-
-root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = PhotoEditorApp(root)
+    root.mainloop()
