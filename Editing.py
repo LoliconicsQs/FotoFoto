@@ -65,6 +65,7 @@ class PhotoEditorApp:
         self.image_path = filedialog.askopenfilename()
         if self.image_path:
             self.original_image = Image.open(self.image_path)
+            self.original_image = self.original_image.resize((800, 600), Image.LANCZOS)
             self.reset_image()
             self.display_image()
     
