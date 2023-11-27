@@ -118,7 +118,7 @@ class PhotoEditorApp:
 
     def decrease_pen_size(self):
         if self.pen_size > 1:
-            self.pen_size -= 1
+            self.pen_size -= 5
 
     def clear_drawing(self):
         self.reset_image()
