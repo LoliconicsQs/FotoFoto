@@ -8,7 +8,7 @@ class PhotoEditorApp:
         self.root = root
         self.root.title("FotoFoto Editor App")
 
-       
+        # Additional canva
         self.image_path = ""
         self.original_image = None
         self.current_image = None
@@ -20,7 +20,8 @@ class PhotoEditorApp:
         # Create GUI
         self.create_menu()
         self.create_canvas()
-
+    
+    # Menu options 
     def create_menu(self):
         menu_bar = tk.Menu(self.root)
 
@@ -54,13 +55,13 @@ class PhotoEditorApp:
         menu_bar.add_cascade(label="Filter", menu=filter_menu)
 
         self.root.config(menu=menu_bar)
-
+    # Image canva 
     def create_canvas(self):
         self.canvas = tk.Canvas(self.root, bg="white", width=600, height=400)
         self.canvas.pack(expand=tk.YES, fill=tk.BOTH)
         self.canvas.bind("<B1-Motion>", self.paint)
     
-
+    # Opening of Image
     def open_image(self):
         self.image_path = filedialog.askopenfilename()
         if self.image_path:
@@ -69,24 +70,24 @@ class PhotoEditorApp:
             self.reset_image()
             self.display_image()
     
-
+    #Reset of filter
     def reset_image(self):
         self.current_image = self.original_image.copy()
         self.draw = None
     
-
+    #Display of Image
     def display_image(self):
         self.image_tk = ImageTk.PhotoImage(self.current_image)
         self.canvas.config(width=self.current_image.width, height=self.current_image.height)
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
-
+    # Save of Image
     def save_image(self):
         if self.current_image:
             save_path = filedialog.asksaveasfilename(defaultextension=".png",
                                                        filetypes=[("PNG files", "*.png")])
             if save_path:
                 self.current_image.save(save_path)
-
+    #Different types of Filters 
     def apply_filter(self, filter_type):
         if self.current_image:
             if filter_type == "black_and_white":
@@ -100,43 +101,45 @@ class PhotoEditorApp:
             elif filter_type == "emboss":
                 self.current_image = self.current_image.filter(ImageFilter.EMBOSS)
             self.display_image()
-
+    # Clears out filters 
     def clear_filters(self):
         self.reset_image()
         self.display_image()
-
+    # Different pen colors 
     def choose_pen_color(self):
         color = colorchooser.askcolor(initialcolor=self.pen_color)[1]
         if color:
             self.pen_color = color
-
+    #Resets pen drawings 
     def reset_pen_color(self):
         self.pen_color = "black"
-
+    # Increases pen 
     def increase_pen_size(self):
         self.pen_size += 5
-
+    # Decreases pen 
     def decrease_pen_size(self):
         if self.pen_size > 1:
             self.pen_size -= 5
-
+    # Clears drawing 
     def clear_drawing(self):
         self.reset_image()
         self.display_image()
-
+    # Pen canva
     def paint(self, event):
         if self.current_image:
             if not self.draw:
                 self.draw = ImageDraw.Draw(self.current_image)
             x1, y1 = (event.x - self.pen_size), (event.y - self.pen_size)
             x2, y2 = (event.x + self.pen_size), (event.y + self.pen_size)
-            self.draw.line([x1, y1, x2, y2], fill=self.pen_color, width=self.pen_size * 2)
+            self.draw.line ([x1, y1, x2, y2], fill=self.pen_color, width=self.pen_size * 2)
             self.display_image()
+# Return to Image Viewer 
 filename = "ImageViewer.py"
 def return_to():
     root.destroy()
     os.system(f"python {filename}")
 
+# Main function of Editing 
 if __name__ == "__main__":
     root = tk.Tk()
     app = PhotoEditorApp(root)
