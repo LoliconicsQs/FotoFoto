@@ -3,17 +3,18 @@ import tkinter.ttk as ttk
 import tkinter.filedialog as tk_file
 from PIL import Image, ImageTk
 import os
-
+ 
+#GUI 
 root = tk.Tk()
-root.geometry('500x500')
+root.geometry('1000x800')
 root.title('FotoFoto')
 
 
-
+# Pop up menu
 def popup_menu(e):
     menu_bar.tk_popup(x=e.x_root, y=e.y_root)
 
-
+# List 
 image_list = []
 image_vars = []
 
@@ -21,7 +22,7 @@ image_vars = []
 def display_images(index):
     image_display_lb.config(image=image_list[index][1])
 
-
+# Images bottom 
 def load_images():
     dir_path = tk_file.askdirectory()
 
@@ -39,8 +40,8 @@ def load_images():
                                              command=lambda n=n: display_images(n))
         globals()[image_vars[n]].pack(side=tk.LEFT)
 
-
-filename = "EditingPage.py"
+# Switch to editing 
+filename = "Editing.py"
 def open_editor_page():
     root.destroy()
     os.system(f"python {filename}")
@@ -62,8 +63,10 @@ editor_page_btn.pack(side=tk.TOP, anchor=tk.W, pady=20, padx=20)
 image_display_lb = tk.Label(root)
 image_display_lb.pack(anchor=tk.CENTER)
 
+#Bottom Image
 canvas = tk.Canvas(root, height=60, width=500)
 canvas.pack(side=tk.BOTTOM, fill=tk.X)
+
 # scroll bar button
 x_scroll_bar = ttk.Scrollbar(root, orient=tk.HORIZONTAL)
 x_scroll_bar.pack(side=tk.BOTTOM, fill=tk.X)
